@@ -1,7 +1,6 @@
 from flask import Flask, request, Response
 from flask_restful import Resource, Api
 from json import dumps
-from bson.objectid import ObjectId
 from search import getPhoneDetails
 
 
