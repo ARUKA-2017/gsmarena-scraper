@@ -15,9 +15,11 @@ def insert(data):
 def save_additional_details(primary,secondary):
 
     db.phones_comparisons.insert(primary,check_keys=False)
-    db.phones_comparisons.insert(secondary,check_keys=False)      
+    db.phones_comparisons.insert(secondary,check_keys=False)
+    print "primary saved for: "+ primary["name"]      
        
 
 def save_pros_and_cons(pros_and_cons):
     db.phone_pros_and_cons.insert(pros_and_cons)
+    print "pros and cons saved for: "+ pros_and_cons["name"]
        

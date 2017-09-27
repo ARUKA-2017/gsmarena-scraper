@@ -56,7 +56,6 @@ def getPhoneDetails(search):
     if data != {}:
         insert(data)
         getProsandCons(data["Model"])
-
     return data
 
 
@@ -66,23 +65,26 @@ def getPhoneDetails(search):
 
 def getProsandCons(model_name):
     
+    print model_name
     res = service.cse().list(q=model_name + " specs", cx="006500068614198421475:vhzvgpftg6s").execute()
-    u = res["items"][0]["link"]
-    print u
-    r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
-    soup = BeautifulSoup(r.text, 'lxml')
-    data = {}
-    data["name"] = model_name
-    data["pros"] = []
-    data["cons"] = []
-    for li in soup.select('.pros > li'):
-        data["pros"].append(li.contents[0])
- 
-   
-    for li in soup.select('ul.cons > li'):
-        data["cons"].append(li.contents[0])
-    print data
-    save_pros_and_cons(data)
+  
+    if int(res["searchInformation"]["totalResults"]) > 0:
+        u = res["items"][0]["link"]
+        print u
+        r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+        soup = BeautifulSoup(r.text, 'lxml')
+        data = {}
+        data["name"] = model_name
+        data["pros"] = []
+        data["cons"] = []
+        for li in soup.select('.pros > li'):
+            data["pros"].append(li.contents[0])
+    
+    
+        for li in soup.select('ul.cons > li'):
+            data["cons"].append(li.contents[0])
+        print data
+        save_pros_and_cons(data)
 
     getComparisons(model_name)
 
@@ -91,41 +93,41 @@ def getProsandCons(model_name):
 def getComparisons(model_name):
    
     res = service.cse().list(q=model_name + "", cx=" 006500068614198421475:jncjwqdrq9m").execute()
+    if int(res["searchInformation"]["totalResults"]) > 0:
+        for item in res["items"]:
+            u = item["link"]
+    
+            r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+            soup = BeautifulSoup(r.text, 'lxml')
+            data = {}
+            count = 0
 
-    for item in res["items"]:
-        u = item["link"]
-  
-        r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
-        soup = BeautifulSoup(r.text, 'lxml')
-        data = {}
-        count = 0
+            for tr in soup.select('table.diffs > tr'):
+                if  len(tr.select('th > h2 > em > span.tr-prod')) > 0:
+                    count += 1
+                    name =  tr.select('th > h2 > em > span.tr-prod')[0].contents[0]
 
-        for tr in soup.select('table.diffs > tr'):
-            if  len(tr.select('th > h2 > em > span.tr-prod')) > 0:
-                count += 1
-                name =  tr.select('th > h2 > em > span.tr-prod')[0].contents[0]
+                    data["data"+str(count)] = {}
+                    data["data"+str(count)]["name"] = name
+                    data["data"+str(count)]["ratio"] = SequenceMatcher(None, model_name, name).ratio()
+                    data["data"+str(count)]["betterThanFeatures"] = []
 
-                data["data"+str(count)] = {}
-                data["data"+str(count)]["name"] = name
-                data["data"+str(count)]["ratio"] = SequenceMatcher(None, model_name, name).ratio()
-                data["data"+str(count)]["betterThanFeatures"] = []
-
-                print name
-            elif count == 0:
-                continue
-            else:
-                if len(tr.select('td')) > 6:
-                    data["data"+str(count)]["betterThanFeatures"].append(tr.select('td')[2].contents[0])
-                    # can use other info here as well
+                    print name
+                elif count == 0:
+                    continue
+                else:
+                    if len(tr.select('td')) > 6:
+                        data["data"+str(count)]["betterThanFeatures"].append(tr.select('td')[2].contents[0])
+                        # can use other info here as well
 
 
-        # process the data and save
-        findPrimary(data["data1"],data["data2"])
-        print data
+            # process the data and save
+            findPrimary(data["data1"],data["data2"],model_name)
+            print data
         
 
 
-def findPrimary(data1,data2):
+def findPrimary(data1,data2, model_name):
     if data1["ratio"] > data2["ratio"]:
         primary = data1
         secondary = data2
@@ -134,6 +136,7 @@ def findPrimary(data1,data2):
         secondary = data1
         primary = data2
 
+    primary["name"] = model_name
  
     primary["compareModel"] = secondary["name"]
     secondary["compareModel"] = primary["name"]
@@ -141,9 +144,49 @@ def findPrimary(data1,data2):
     primary["worseThanFeatures"] = secondary["betterThanFeatures"]
     secondary["worseThanFeatures"] = primary["betterThanFeatures"]
 
+    getSecondaryName(primary,secondary)
+
+
+def getSecondaryName(primary,secondary):
+    res = service.cse().list(q=secondary["name"], cx="006500068614198421475:-wsj6q61h0e").execute()
+    if int(res["searchInformation"]["totalResults"]) > 0:
+        u = res["items"][0]["link"]
+        print u
+    
+        r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+        soup = BeautifulSoup(r.text, 'lxml')
+        data = {}
+        # name = soup.select('.specs-phone-name-title')[0].contents[0]
+        try:
+            for t in soup.select('table'):
+                h = []
+                for e in t.select('.ttl > a'):
+                    h.append(e.contents[0])
+                c=[]
+                for e in t.select('.nfo'):
+                    if e.contents:
+                        c.append(e.contents[0])
+                section = t.select('th')[0].contents[0]
+                data.update(dict(zip(h, c)))
+            title = soup.select('.specs-phone-name-title')[0].get_text()
+            data.update({'Model': title})
+            if 'Technology' in data:
+                data['Technology'] = str(data['Technology']).strip('<a class="link-network-detail collapse" href="#"></a>')
+        except:
+            print '404'
+
+
+
+        if data != {}:
+            print "secondary found:"
+            print data["Model"] 
+            secondary["name"] = data["Model"]
+            insert(data)
+
     save_additional_details(primary,secondary)
+
 
 # getProsandCons("Samsung Galaxy S7 specs")
 # data = getPhoneDetails('htc A9')
 
-# getPhoneDetails("Sony Xperia Arc S")
+# getPhoneDetails("lg g9")
