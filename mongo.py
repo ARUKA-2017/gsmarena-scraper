@@ -5,13 +5,19 @@ db =  client.akura
 coll = db.phones
 
 def insert(data):
-    phone =  coll.find_one({'Model': data["Model"] })
+    phone =  db.phones.find_one({'Model': data["Model"] })
     if phone is None :
-        coll.insert(data, check_keys=False)
+        db.phones.insert(data, check_keys=False)
     else:
         print "Already Exists"
     
        
-       
+def save_additional_details(primary,secondary):
+
+    db.phones_comparisons.insert(primary,check_keys=False)
+    db.phones_comparisons.insert(secondary,check_keys=False)      
        
 
+def save_pros_and_cons(pros_and_cons):
+    db.phone_pros_and_cons.insert(pros_and_cons)
+       

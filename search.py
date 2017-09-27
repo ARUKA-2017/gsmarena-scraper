@@ -7,7 +7,8 @@ import requests
 import utils
 import csv
 import pymongo
-from mongo import insert
+from mongo import insert, save_additional_details, save_pros_and_cons
+from difflib import SequenceMatcher
 
 reload(sys)
 sys.setdefaultencoding("utf8")
@@ -20,17 +21,15 @@ socket.socket = socks.socksocket
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
 }
+service = build("customsearch",'v1', developerKey="AIzaSyBvSxGvp8S7YAAMzp3CKaBc40TMWVNAweg")
 
 def getPhoneDetails(search):
-    service = build("customsearch",'v1', developerKey="AIzaSyBvSxGvp8S7YAAMzp3CKaBc40TMWVNAweg")
-
+    
     res = service.cse().list(q=search, cx="006500068614198421475:-wsj6q61h0e").execute()
 
     u = res["items"][0]["link"]
     print u
-
-
-    print 'url', u
+ 
     r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
@@ -54,9 +53,97 @@ def getPhoneDetails(search):
         print '404'
 
     print data
+    if data != {}:
+        insert(data)
+        getProsandCons(data["Model"])
+
     return data
 
-# data = getPhoneDetails('htc A9')
-# if data != {}:
-#     insert(data)
+
+
+
+
+
+def getProsandCons(model_name):
+    
+    res = service.cse().list(q=model_name + " specs", cx="006500068614198421475:vhzvgpftg6s").execute()
+    u = res["items"][0]["link"]
+    print u
+    r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+    soup = BeautifulSoup(r.text, 'lxml')
+    data = {}
+    data["name"] = model_name
+    data["pros"] = []
+    data["cons"] = []
+    for li in soup.select('.pros > li'):
+        data["pros"].append(li.contents[0])
  
+   
+    for li in soup.select('ul.cons > li'):
+        data["cons"].append(li.contents[0])
+    print data
+    save_pros_and_cons(data)
+
+    getComparisons(model_name)
+
+
+
+def getComparisons(model_name):
+   
+    res = service.cse().list(q=model_name + "", cx=" 006500068614198421475:jncjwqdrq9m").execute()
+
+    for item in res["items"]:
+        u = item["link"]
+  
+        r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+        soup = BeautifulSoup(r.text, 'lxml')
+        data = {}
+        count = 0
+
+        for tr in soup.select('table.diffs > tr'):
+            if  len(tr.select('th > h2 > em > span.tr-prod')) > 0:
+                count += 1
+                name =  tr.select('th > h2 > em > span.tr-prod')[0].contents[0]
+
+                data["data"+str(count)] = {}
+                data["data"+str(count)]["name"] = name
+                data["data"+str(count)]["ratio"] = SequenceMatcher(None, model_name, name).ratio()
+                data["data"+str(count)]["betterThanFeatures"] = []
+
+                print name
+            elif count == 0:
+                continue
+            else:
+                if len(tr.select('td')) > 6:
+                    data["data"+str(count)]["betterThanFeatures"].append(tr.select('td')[2].contents[0])
+                    # can use other info here as well
+
+
+        # process the data and save
+        findPrimary(data["data1"],data["data2"])
+        print data
+        
+
+
+def findPrimary(data1,data2):
+    if data1["ratio"] > data2["ratio"]:
+        primary = data1
+        secondary = data2
+
+    else:
+        secondary = data1
+        primary = data2
+
+ 
+    primary["compareModel"] = secondary["name"]
+    secondary["compareModel"] = primary["name"]
+
+    primary["worseThanFeatures"] = secondary["betterThanFeatures"]
+    secondary["worseThanFeatures"] = primary["betterThanFeatures"]
+
+    save_additional_details(primary,secondary)
+
+# getProsandCons("Samsung Galaxy S7 specs")
+# data = getPhoneDetails('htc A9')
+
+# getPhoneDetails("Sony Xperia Arc S")

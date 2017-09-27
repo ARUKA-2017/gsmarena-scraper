@@ -6,7 +6,7 @@ import requests
 import utils
 import csv
 import pymongo
-
+from mongo import insert
 
 reload(sys)
 sys.setdefaultencoding("utf8")
@@ -69,6 +69,7 @@ with open('sample1.csv', 'w') as csvfile:
             data['Technology'] = str(data['Technology']).strip('<a class="link-network-detail collapse" href="#"></a>')
 
         print data
+        insert(data)
         coll.insert(data, check_keys=False)
     
        
