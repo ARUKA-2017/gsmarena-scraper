@@ -192,18 +192,18 @@ def getSecondaryName(primary,secondary):
                 if data["Model"] is None:
                     print 'No Name Found'
                 else:
-                    getProsandCons(data["Model"])
                     print "secondary found:"
                     print data["Model"] 
                     secondary["name"] = data["Model"]
+                    bool = insert(data)
+                    if bool:
+                        print "saved: "
+                        print "getting details for: "
+                        print secondary["name"]
+                        getProsandCons(secondary["name"])
             except:
                 print 'No Name Found'
 
-            bool = insert(data)
-            if bool:
-                print "getting details for: "
-                print secondary["name"]
-                getProsandCons(secondary["name"])
 
     save_additional_details(primary,secondary)
 
@@ -211,10 +211,10 @@ def getSecondaryName(primary,secondary):
 # getProsandCons("Samsung Galaxy S7 specs")
 # data = getPhoneDetails('htc A9')
 
-getPhoneDetails("Samasung Galaxy S8")
-getPhoneDetails("Sony Xperia Z")
-getPhoneDetails("Apple iPhone 8")
-getPhoneDetails("Apple iPhone 7")
-getPhoneDetails("HTC U11")
-getPhoneDetails("One plus 5")
-getPhoneDetails("Google Pixel")
+# getPhoneDetails("Samasung Galaxy S8")
+# getPhoneDetails("Sony Xperia Z")
+# getPhoneDetails("Apple iPhone 8")
+# getPhoneDetails("Apple iPhone 7")
+# getPhoneDetails("HTC U11")
+# getPhoneDetails("One plus 5")
+# getPhoneDetails("Google Pixel")
