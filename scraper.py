@@ -22,7 +22,7 @@ db =  client.akura
 coll = db.phones
 
 
-with open('filtered_urls.csv', 'rb') as f:
+with open('urls.csv', 'rb') as f:
     rows = csv.reader(f)
     urls = [r[0] for r in rows]
     urls = urls[1:]
