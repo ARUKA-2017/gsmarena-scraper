@@ -8,8 +8,10 @@ def insert(data):
     phone =  db.phones.find_one({'Model': data["Model"] })
     if phone is None :
         db.phones.insert(data, check_keys=False)
+        return True
     else:
         print "Already Exists"
+        return False
     
        
 def save_additional_details(primary,secondary):

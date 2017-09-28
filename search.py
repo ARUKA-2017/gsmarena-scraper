@@ -25,11 +25,14 @@ service = build("customsearch",'v1', developerKey="AIzaSyBvSxGvp8S7YAAMzp3CKaBc4
 
 def getPhoneDetails(search):
     
-    res = service.cse().list(q=search, cx="006500068614198421475:-wsj6q61h0e").execute()
-
-    u = res["items"][0]["link"]
-    print u
+    res = service.cse().list(q=search, cx="016617856427036748002:mblvnhdtjp4").execute()
+    if int(res["searchInformation"]["totalResults"]) > 0:
+        u = res["items"][0]["link"]
+        print u
+        getByUrl(u)
  
+
+def getByUrl(u):
     r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
@@ -54,8 +57,15 @@ def getPhoneDetails(search):
 
     print data
     if data != {}:
-        insert(data)
-        getProsandCons(data["Model"])
+        bool = insert(data)
+        if bool:
+            try:
+                if data["Model"] is None:
+                    print 'No Name Found'
+                else:
+                    getProsandCons(data["Model"])
+            except:
+                print 'No Name Found'
     return data
 
 
@@ -66,7 +76,7 @@ def getPhoneDetails(search):
 def getProsandCons(model_name):
     
     print model_name
-    res = service.cse().list(q=model_name + " specs", cx="006500068614198421475:vhzvgpftg6s").execute()
+    res = service.cse().list(q=model_name + " specs", cx="016617856427036748002:eamia_g5foe").execute()
   
     if int(res["searchInformation"]["totalResults"]) > 0:
         u = res["items"][0]["link"]
@@ -92,7 +102,7 @@ def getProsandCons(model_name):
 
 def getComparisons(model_name):
    
-    res = service.cse().list(q=model_name + "", cx=" 006500068614198421475:jncjwqdrq9m").execute()
+    res = service.cse().list(q=model_name + "", cx="016617856427036748002:sdc91k8hcbi").execute()
     if int(res["searchInformation"]["totalResults"]) > 0:
         for item in res["items"]:
             u = item["link"]
@@ -178,10 +188,22 @@ def getSecondaryName(primary,secondary):
 
 
         if data != {}:
-            print "secondary found:"
-            print data["Model"] 
-            secondary["name"] = data["Model"]
-            insert(data)
+            try:
+                if data["Model"] is None:
+                    print 'No Name Found'
+                else:
+                    getProsandCons(data["Model"])
+                    print "secondary found:"
+                    print data["Model"] 
+                    secondary["name"] = data["Model"]
+            except:
+                print 'No Name Found'
+
+            bool = insert(data)
+            if bool:
+                print "getting details for: "
+                print secondary["name"]
+                getProsandCons(secondary["name"])
 
     save_additional_details(primary,secondary)
 
@@ -189,4 +211,10 @@ def getSecondaryName(primary,secondary):
 # getProsandCons("Samsung Galaxy S7 specs")
 # data = getPhoneDetails('htc A9')
 
-# getPhoneDetails("lg g9")
+getPhoneDetails("Samasung Galaxy S8")
+getPhoneDetails("Sony Xperia Z")
+getPhoneDetails("Apple iPhone 8")
+getPhoneDetails("Apple iPhone 7")
+getPhoneDetails("HTC U11")
+getPhoneDetails("One plus 5")
+getPhoneDetails("Google Pixel")

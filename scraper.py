@@ -7,6 +7,7 @@ import utils
 import csv
 import pymongo
 from mongo import insert
+from search import getByUrl
 
 reload(sys)
 sys.setdefaultencoding("utf8")
@@ -47,30 +48,36 @@ with open('sample1.csv', 'w') as csvfile:
     #     csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
     # writer.writeheader()
     for u in urls:
-        print 'url', u
-        r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
-        soup = BeautifulSoup(r.text, 'lxml')
-        data = {}
-        for t in soup.select('table'):
-            h = []
-            for e in t.select('.ttl > a'):
-                h.append(e.contents[0])
-            c=[]
-            for e in t.select('.nfo'):
-                if e.contents:
-                    c.append(e.contents[0])
-            section = t.select('th')[0].contents[0]
-            #h = [e.contents[0] for e in t.select('.ttl > a')]
-            #c = [str(e.contents[0]).encode('utf-8') for e in t.select('.nfo')]
-            data.update(dict(zip(h, c)))
-        title = soup.select('.specs-phone-name-title')[0].get_text()
-        data.update({'Model': title})
-        if 'Technology' in data:
-            data['Technology'] = str(data['Technology']).strip('<a class="link-network-detail collapse" href="#"></a>')
+        getByUrl(u)
 
-        print data
-        insert(data)
-        coll.insert(data, check_keys=False)
-    
+ 
+        text_file = open("Output.txt", "w")
+        text_file.write(u+ "\n")
+        text_file.close()
+        # print 'url', u
+        # r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
+        # soup = BeautifulSoup(r.text, 'lxml')
+        # data = {}
+        # for t in soup.select('table'):
+        #     h = []
+        #     for e in t.select('.ttl > a'):
+        #         h.append(e.contents[0])
+        #     c=[]
+        #     for e in t.select('.nfo'):
+        #         if e.contents:
+        #             c.append(e.contents[0])
+        #     section = t.select('th')[0].contents[0]
+        #     #h = [e.contents[0] for e in t.select('.ttl > a')]
+        #     #c = [str(e.contents[0]).encode('utf-8') for e in t.select('.nfo')]
+        #     data.update(dict(zip(h, c)))
+        # title = soup.select('.specs-phone-name-title')[0].get_text()
+        # data.update({'Model': title})
+        # if 'Technology' in data:
+        #     data['Technology'] = str(data['Technology']).strip('<a class="link-network-detail collapse" href="#"></a>')
+
+        # print data
+        # insert(data)
+        # coll.insert(data, check_keys=False)
+
        
         # writer.writerow(data)
