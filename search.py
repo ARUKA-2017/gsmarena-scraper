@@ -218,3 +218,6 @@ def getSecondaryName(primary,secondary):
 # getPhoneDetails("HTC U11")
 # getPhoneDetails("One plus 5")
 # getPhoneDetails("Google Pixel")
+# getPhoneDetails("Apple iPhone X")
+# getPhoneDetails("Essential Phone")
+# getPhoneDetails("LG G7")
