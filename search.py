@@ -29,13 +29,14 @@ def getPhoneDetails(search):
     if int(res["searchInformation"]["totalResults"]) > 0:
         u = res["items"][0]["link"]
         print u
-        getByUrl(u)
+        return getByUrl(u)
  
 
 def getByUrl(u):
     r = requests.get(u, headers=utils.merge(DEFAULT_HEADERS, {}))
     soup = BeautifulSoup(r.text, 'lxml')
     data = {}
+    model_name =""
     # name = soup.select('.specs-phone-name-title')[0].contents[0]
     try:
         for t in soup.select('table'):
@@ -62,10 +63,13 @@ def getByUrl(u):
             try:
                 if data["Model"] is None:
                     print 'No Name Found'
+                    model_name = null
                 else:
                     getProsandCons(data["Model"])
+                    model_name = data["Model"]
             except:
                 print 'No Name Found'
+  
     return data
 
 
@@ -216,8 +220,8 @@ def getSecondaryName(primary,secondary):
 # getPhoneDetails("Apple iPhone 8")
 # getPhoneDetails("Apple iPhone 7")
 # getPhoneDetails("HTC U11")
-# getPhoneDetails("One plus 5")
-# getPhoneDetails("Google Pixel")
+# getPhoneDetails("One plus 5t")
+# getPhoneDetails("Google Pixel 2")
 # getPhoneDetails("Apple iPhone X")
 # getPhoneDetails("Essential Phone")
-# getPhoneDetails("LG G7")
+#  getPhoneDetails("Apple iPhone X")
