@@ -214,7 +214,7 @@ def getSecondaryName(primary,secondary):
 
 
 def getAmazonURL(name):
-    res = service.cse().list(q=name + " Phone ", cx="006500068614198421475:xhtaxqo-nbc").execute()
+    res = service.cse().list(q=name + " Phone dp", cx="006500068614198421475:xhtaxqo-nbc").execute()
     if int(res["searchInformation"]["totalResults"]) > 0:
         u = res["items"][0]["link"]
         print u
