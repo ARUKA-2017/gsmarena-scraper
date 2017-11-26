@@ -204,7 +204,8 @@ def getSecondaryName(primary,secondary):
                         print "saved: "
                         print "getting details for: "
                         print secondary["name"]
-                        getProsandCons(secondary["name"])
+                        # recursive
+                        # getProsandCons(secondary["name"])
             except:
                 print 'No Name Found'
 
